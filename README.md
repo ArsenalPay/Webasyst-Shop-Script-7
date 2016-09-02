@@ -22,7 +22,7 @@
 1. Выполните консольную команду из корня директории Вашего сайта:  
 `php wa.php createSystemplugin payment arsenalpay -name 'ArsenalPay' -version 1.0.0 -vendor 1032647` 
 2. Скачайте плагин с `https://github.com/ArsenalPay/Webasyst-Shop-Script-7`
-3. Загрузите все содержимое из папки плагина в папку wa-plugins/payments/arsenalpay/ Вашего сервера
+3. Загрузите все содержимое из папки arsenalpay/ плагина в папку wa-plugins/payments/arsenalpay/ Вашего сервера
 4. Зайдите в администрирование Webasyst Shop-Script 7;
 5. Пройдите в **Инсталлер>Плагины**;
 6. Найдите плагин **ArsenalPay**;
