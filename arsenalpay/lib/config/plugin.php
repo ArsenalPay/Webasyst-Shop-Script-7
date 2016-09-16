@@ -9,7 +9,7 @@ return array(
   // plugin vendor ID (for 3rd parties vendors it's a number)
   'vendor' => 1032647,
   // plugin version
-  'version' => '1.0.0',
+  'version' => '1.0.1',
   'locale' => array('ru_RU', ),
   'type' => waPayment::TYPE_ONLINE,
 );

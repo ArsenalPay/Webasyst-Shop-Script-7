@@ -5,7 +5,7 @@
 [Arsenal Pay processing center]( https://arsenalpay.ru/)
 
 ## Version
-1.0.0
+1.0.1
 
 ### О ПЛАГИНЕ
 * Плагин платежной системы ArsenalPay для Webasyst Shop-Script 7 позволяет легко встроить платежную страницу на Ваш сайт.
