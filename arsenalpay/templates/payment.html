@@ -1,1 +1,13 @@
-<iframe id="arsenalpay" src="{$arsenalpay_url}?{$arsenalpay_params}" "{$frame_params}"></iframe>
+<div id='arsenalpay-widget'></div>
+<script src='https://arsenalpay.ru/widget/script.js'></script>
+<script>
+    var widget = new ArsenalpayWidget();
+    widget.element = 'arsenalpay-widget';
+    widget.widget = {$widget};
+    widget.destination = '{$destination}';
+    widget.amount = '{$amount}';
+    widget.userId = '{$user_id}';
+    widget.nonce = '{$nonce}';
+    widget.widgetSign = '{$widget_sign}';
+    widget.render();
+</script>
