@@ -2,19 +2,19 @@
 return array(
 	'widget_id' => array(
 		'value' => '',
-		'title' => /*_wp*/('Widget id *'),
+		'title' => /*_wp*/('widget *'),
 		'description' => /*_wp*/('Номер виджета, который присваивается ТСП для работы с виджетом (обязательный)'),
 		'control_type' => waHtmlControl::INPUT,
 	),
 	'widget_key' => array(
 		'value' => '',
-		'title' => /*_wp*/('Widget key *'),
+		'title' => /*_wp*/('widgetKey *'),
 		'description' => /*_wp*/('Ключ, который присваивается ТСП для работы с виджетом (обязательный)'),
 		'control_type' => waHtmlControl::INPUT,
 	),
 	'callback_key' => array(
 		'value' => '',
-		'title' => /*_wp*/('Callback key*'),
+		'title' => /*_wp*/('callbackKey*'),
 		'description' => /*_wp*/('Ключ для проверки подписи запросов (обязательный)'),
 		'control_type' => waHtmlControl::INPUT,
 	),
