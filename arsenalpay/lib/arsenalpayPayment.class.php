@@ -8,7 +8,6 @@ class arsenalpayPayment extends waPayment implements waIPAyment {
 	private $pattern = '/^(\w[\w\d]+)_([\w\d]+)_(.+)$/';
 	private $template = '%s_%d_%s';
 
-
 	public function allowedCurrency() {
 		return array(
 			'RUB',
@@ -105,87 +104,89 @@ class arsenalpayPayment extends waPayment implements waIPAyment {
 		$message            = null;
 		$back_url           = null;
 		$response           = null;
+		$fiscal             = false;
 
 		switch ($request['FUNCTION']) {
+
 			case 'check':
-//				$this->callback_check($request);
+
+				$order_model = new shopOrderModel();
+				$order = $order_model->getById($this->order_id);
+				$items_model = new shopOrderItemsModel();
+				$order['items'] = $items_model->getItems($this->order_id);
+				$contact = new waContact($order['contact_id']);
+
 				$app_payment_method        = self::CALLBACK_CONFIRMATION;
 				$transaction_data['type']  = self::OPERATION_CHECK;
 				$transaction_data['state'] = self::STATE_AUTH;
 				$back_url                  = $this->getAdapter()->getBackUrl(waAppPayment::URL_SUCCESS, $transaction_data);
 				$message                   = "Заказ успешно подтвержден.";
-				$response = "YES";
-				break;
+				$response                  = "YES";
+				$fiscal                    = $this->prepareFiscal($transaction_data, $request, $order, $contact);
+			break;
 
 			case 'payment':
-//				$this->callback_payment($request);
 				$app_payment_method        = self::CALLBACK_PAYMENT;
 				$transaction_data['type']  = self::OPERATION_AUTH_CAPTURE;
 				$transaction_data['state'] = self::STATE_CAPTURED;
 				$back_url                  = $this->getAdapter()->getBackUrl(waAppPayment::URL_SUCCESS, $transaction_data);
 				$message                   = "Заказ успешно оплачен.";
-				$response = "OK";
-				break;
+				$response                  = "OK";
+			break;
 
 			case 'cancel':
-//				$this->callback_cancel($request);
 				$app_payment_method        = self::CALLBACK_CANCEL;
 				$transaction_data['type']  = self::OPERATION_CANCEL;
 				$transaction_data['state'] = self::STATE_CANCELED;
 				$back_url                  = $this->getAdapter()->getBackUrl(waAppPayment::URL_SUCCESS, $transaction_data);
 				$message                   = "Оплата заказа отменена.";
-				$response = "OK";
-				break;
+				$response                  = "OK";
+			break;
 
 			case 'cancelinit':
-//				$this->callback_cancel($request);
 				$app_payment_method        = self::CALLBACK_CANCEL;
 				$transaction_data['type']  = self::OPERATION_CANCEL;
 				$transaction_data['state'] = self::STATE_CANCELED;
 				$back_url                  = $this->getAdapter()->getBackUrl(waAppPayment::URL_SUCCESS, $transaction_data);
 				$message                   = "Оплата заказа отменена.";
-				$response = "OK";
-				break;
+				$response                  = "OK";
+			break;
 
 			case 'refund':
-//				$this->callback_refund($request);
 				$app_payment_method        = self::CALLBACK_REFUND;
 				$transaction_data['type']  = self::OPERATION_REFUND;
 				$transaction_data['state'] = self::STATE_REFUNDED;
 				$back_url                  = $this->getAdapter()->getBackUrl(waAppPayment::URL_SUCCESS, $transaction_data);
 				$message                   = "Частичный возврат платежа.";
-				$response = "OK";
-				break;
+				$response                  = "OK";
+			break;
 
 			case 'reverse':
-//				$this->callback_reverse($request);
 				$app_payment_method        = self::CALLBACK_REFUND;
 				$transaction_data['type']  = self::OPERATION_REFUND;
 				$transaction_data['state'] = self::STATE_REFUNDED;
 				$back_url                  = $this->getAdapter()->getBackUrl(waAppPayment::URL_SUCCESS, $transaction_data);
 				$message                   = "Полный возврат платежа.";
-				$response = "OK";
-				break;
+				$response                  = "OK";
+			break;
 
 			case 'reversal':
-//				$this->callback_reverse($request);
 				$app_payment_method        = self::CALLBACK_REFUND;
 				$transaction_data['type']  = self::OPERATION_REFUND;
 				$transaction_data['state'] = self::STATE_REFUNDED;
 				$back_url                  = $this->getAdapter()->getBackUrl(waAppPayment::URL_SUCCESS, $transaction_data);
 				$message                   = "Полный возврат платежа.";
-				$response = "OK";
-				break;
+				$response                  = "OK";
+			break;
 
 			case 'hold':
-//				$this->callback_hold($request);
 				$app_payment_method        = self::CALLBACK_CONFIRMATION;
 				$transaction_data['type']  = self::OPERATION_AUTH_ONLY;
 				$transaction_data['state'] = self::STATE_AUTH;
 				$back_url                  = $this->getAdapter()->getBackUrl(waAppPayment::URL_SUCCESS, $transaction_data);
 				$message                   = "Платеж зарезервирован";
-				$response = "OK";
-				break;
+				$response                  = "OK";
+			break;
 
 			default: {
 				self::log($this->id, array('error' => 'Function is not support: ' . $request['FUNCTION']));
@@ -200,6 +201,14 @@ class arsenalpayPayment extends waPayment implements waIPAyment {
 		}
 
 		self::log($this->id, array('response' => $response));
+
+		if(isset($request['FORMAT']) && $request['FORMAT'] == 'json') {
+			$response = array("response" => $response);
+			if ($fiscal && isset($request['OFD']) && $request['OFD'] == 1) {
+				$response['ofd'] = $fiscal;
+			}
+			$response = json_encode($response, JSON_UNESCAPED_UNICODE);
+		}
 		echo $response;
 
 		return array(
@@ -236,8 +245,7 @@ class arsenalpayPayment extends waPayment implements waIPAyment {
 			'MERCH_TYPE',   // Тип магазина (0 - Юридическое лицо, 1 - Физическое лицо)
 			'STATUS',       // Статус платежа (check - проверка, payment - платеж)
 			'DATETIME',     // Date and time in ISO-8601 format (YYYY-MM-DDThh:mm:ss±hh:mm), urlencoded.
-			'SIGN',         // Подпись запроса = md5(md5(ID).md(FUNCTION).md5(RRN).md5(PAYER).md5(AMOUNT).
-			// md5(ACCOUNT).md(STATUS).md5(secret_key))
+			'SIGN',         // Подпись запроса = md5(md5(ID).md(FUNCTION).md5(RRN).md5(PAYER).md5(AMOUNT).md5(ACCOUNT).md(STATUS).md5(secret_key))
 		);
 		foreach ($fields as $key) {
 			if (!array_key_exists($key, $transaction_raw_data)) {
@@ -275,6 +283,37 @@ class arsenalpayPayment extends waPayment implements waIPAyment {
 			)) ? true : false;
 
 		return $validSign;
+	}
+
+	private function prepareFiscal($transaction_data, $request, $order, $contact) {
+
+		$emails = $contact->get('email', 'value');
+
+		foreach($order['items'] as $key => $val) {
+			$name     = $val['name'];
+			$price    = (float)$val['price'];
+			$quantity = (int)$val['quantity'];
+			$sum      = $price*$quantity;
+			$items[]  = array(
+				'name'     => $name,
+				'price'    => $price,
+				'quantity' => $quantity,
+				'sum'      => $sum,
+			);
+		}
+
+		$a = Array(
+            'id' => $request['RRN'],
+            'type' => 'sell',
+            'receipt' => Array(
+                    'attributes' => Array(
+                            'email' => $emails[0],
+                        ),
+                    'items' => $items,
+                ),
+		);
+
+		return $a;
 	}
 
 }
