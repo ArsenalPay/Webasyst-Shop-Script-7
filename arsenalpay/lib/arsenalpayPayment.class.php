@@ -109,20 +109,21 @@ class arsenalpayPayment extends waPayment implements waIPAyment {
 		switch ($request['FUNCTION']) {
 
 			case 'check':
-
-				$order_model = new shopOrderModel();
-				$order = $order_model->getById($this->order_id);
-				$items_model = new shopOrderItemsModel();
-				$order['items'] = $items_model->getItems($this->order_id);
-				$contact = new waContact($order['contact_id']);
-
 				$app_payment_method        = self::CALLBACK_CONFIRMATION;
 				$transaction_data['type']  = self::OPERATION_CHECK;
 				$transaction_data['state'] = self::STATE_AUTH;
 				$back_url                  = $this->getAdapter()->getBackUrl(waAppPayment::URL_SUCCESS, $transaction_data);
 				$message                   = "Заказ успешно подтвержден.";
 				$response                  = "YES";
-				$fiscal                    = $this->prepareFiscal($transaction_data, $request, $order, $contact);
+
+				if (class_exists('shopOrderModel') && class_exists('shopOrderItemsModel')) {
+					$order_model = new shopOrderModel();
+					$order = $order_model->getById($this->order_id);
+					$items_model = new shopOrderItemsModel();
+					$order['items'] = $items_model->getItems($this->order_id);
+					$contact = new waContact($order['contact_id']);
+					$fiscal = $this->prepareFiscal($transaction_data, $request, $order, $contact);
+				}
 			break;
 
 			case 'payment':
