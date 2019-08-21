@@ -290,16 +290,27 @@ class arsenalpayPayment extends waPayment implements waIPAyment {
 
 		$emails = $contact->get('email', 'value');
 
+		$sumKorz = 0;
 		foreach($order['items'] as $key => $val) {
 			$name     = $val['name'];
 			$price    = (float)$val['price'];
 			$quantity = (int)$val['quantity'];
 			$sum      = $price*$quantity;
+			$sumKorz+= $sum;
 			$items[]  = array(
 				'name'     => $name,
 				'price'    => $price,
 				'quantity' => $quantity,
 				'sum'      => $sum,
+			);
+		}
+		if($request['AMOUNT'] > $sumKorz) {
+			$sumOst = $request['AMOUNT'] - $sumKorz;
+			$items[]  = array(
+				'name'     => 'Прочие услуги',
+				'price'    => $sumOst,
+				'quantity' => 1,
+				'sum'      => $sumOst,
 			);
 		}
 
