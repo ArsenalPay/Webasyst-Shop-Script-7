@@ -289,14 +289,11 @@ class arsenalpayPayment extends waPayment implements waIPAyment {
 	private function prepareFiscal($transaction_data, $request, $order, $contact) {
 
 		$emails = $contact->get('email', 'value');
-
-		$sumKorz = 0;
 		foreach($order['items'] as $key => $val) {
 			$name     = $val['name'];
 			$price    = (float)$val['price'];
 			$quantity = (int)$val['quantity'];
-			$sum      = $price*$quantity;
-			$sumKorz+= $sum;
+			$sum      = $price*$quantity-$val['total_discount'];
 			$items[]  = array(
 				'name'     => $name,
 				'price'    => $price,
@@ -304,13 +301,12 @@ class arsenalpayPayment extends waPayment implements waIPAyment {
 				'sum'      => $sum,
 			);
 		}
-		if($request['AMOUNT'] > $sumKorz) {
-			$sumOst = $request['AMOUNT'] - $sumKorz;
+		if($order['shipping'] > 0) {
 			$items[]  = array(
-				'name'     => 'Прочие услуги',
-				'price'    => $sumOst,
+				'name'     => 'Доставка',
+				'price'    => (float)$order['shipping'],
 				'quantity' => 1,
-				'sum'      => $sumOst,
+				'sum'      => (float)$order['shipping'],
 			);
 		}
 
